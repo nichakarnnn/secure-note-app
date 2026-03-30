@@ -1,6 +1,6 @@
 let notes = [];
 let editingNoteId = null; // เก็บ ID เมื่อต้องการแก้ไข
-const API_URL = 'http://localhost:3000/api/notes';
+const API_URL = 'https://secure-note-app-2k7r.vercel.app/api/notes';
 
 // 1. โหลดข้อมูลจาก Backend
 async function fetchNotes() {
