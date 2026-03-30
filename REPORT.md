@@ -1,37 +1,36 @@
-# SecureNote - Conceptual Report
+# 📝 SecureNote - Conceptual Report
 
-## 1. JS Engine vs. Runtime
-**Explanation:** โค้ด JavaScript ของเราในโปรเจกต์นี้ถูกประมวลผลและทำงานใน 2 สภาพแวดล้อมที่แตกต่างกัน:
-* **Frontend (Browser):** โค้ดในไฟล์ `app.js` ทำงานอยู่บน Browser Runtime Environment ซึ่งใช้ JS Engine (เช่น V8 Engine ใน Chrome) ในการคอมไพล์และรันโค้ด โดย Browser Runtime จะเตรียม Web APIs มาให้ใช้งาน เช่น `window`, `document` (DOM) และ `fetch` API เพื่อให้ปรับแต่งหน้าจอและดึงข้อมูลได้
-* **Backend (Node.js):** โค้ดในไฟล์ `server.js` ทำงานอยู่บน Node.js Runtime Environment แม้ว่า Node.js จะใช้ V8 Engine เหมือนกัน แต่ Runtime นี้ไม่มี DOM ให้ใช้ (ไม่มี `window` หรือ `document`) แต่จะเตรียม APIs สำหรับฝั่งเซิร์ฟเวอร์มาให้แทน เช่น การจัดการ Network, HTTP Requests และ File System ทำให้สามารถสร้าง Web Server รับส่งข้อมูลได้
+## 1. JS Engine vs. Runtime Environment
+**Explanation:** โค้ด JavaScript ในโปรเจกต์นี้ถูกประมวลผลและทำงานใน 2 สภาพแวดล้อม (Environment) ที่แตกต่างกันอย่างชัดเจน:
+* **Frontend (Browser Runtime):** โค้ดในไฟล์ `app.js` ทำงานอยู่บนเบราว์เซอร์ ซึ่งใช้ JS Engine (เช่น V8 Engine ใน Chrome) ในการคอมไพล์และรันโค้ด โดย Browser Runtime จะจัดเตรียม Web APIs มาให้เราเรียกใช้งาน เช่น `window`, `document` (สำหรับการจัดการ DOM) และ `fetch` API สำหรับการดึงข้อมูลผ่านเครือข่าย
+* **Backend (Node.js Runtime):** โค้ดในไฟล์ `server.js` ทำงานอยู่บน Node.js แม้ว่า Node.js จะขับเคลื่อนด้วย V8 Engine เหมือนกัน แต่ Runtime นี้จะไม่มี Web APIs (ไม่มี `window` หรือ `document`) แต่จะจัดเตรียม APIs สำหรับฝั่งเซิร์ฟเวอร์มาให้แทน เช่น การจัดการ Network, สร้าง HTTP Server (ผ่าน Express) และ File System (`fs`) สำหรับจัดการไฟล์ในระบบ
 
 ## 2. DOM (Document Object Model) Update Mechanism
-**Explanation:**
-เนื่องจากโปรเจกต์นี้ใช้ Vanilla JavaScript (HTML/CSS/JS บริสุทธิ์) จึงต้องทำการอัปเดตหน้าจอโดยการปรับแต่ง DOM Tree โดยตรงดังนี้:
-1. เมื่อได้รับข้อมูลโน้ตจากการใช้ `fetch` โค้ดจะเรียกใช้ฟังก์ชัน `renderNotes()`
-2. ฟังก์ชันนี้จะนำอาร์เรย์ `notes` มาทำการ `.map()` เพื่อสร้างเป็น String ของ HTML Tags (`<div class="note-card">...</div>`)
-3. จากนั้นเราใช้คำสั่ง `document.getElementById('notesContainer').innerHTML = ...` เพื่อแทรก HTML String นั้นเข้าไปในหน้าเว็บ
-4. เบราว์เซอร์จะทำการอัปเดต DOM Tree ทันที ทำให้หน้าจอแสดงข้อมูลโน้ตใหม่ๆ (หรือโน้ตที่ถูกลบหายไป) ได้แบบไดนามิกโดยที่ผู้ใช้ไม่ต้องกดรีโหลดหน้าเว็บใหม่เลย
+**Explanation:** เนื่องจากโปรเจกต์นี้ใช้ Vanilla JavaScript (HTML/CSS/JS บริสุทธิ์) กลไกการอัปเดตหน้าจอจึงทำผ่านการจัดการ DOM Tree โดยตรง:
+1. เมื่อได้รับข้อมูลโน้ตจากการใช้ `fetch` หน้าบ้านจะเรียกใช้ฟังก์ชัน `renderNotes()`
+2. ฟังก์ชันนี้จะนำอาร์เรย์ `notes` มาวนลูปด้วย `.map()` เพื่อแปลงข้อมูลให้กลายเป็น String ของ HTML Tags (เช่น `<div class="note-card">...</div>`)
+3. จากนั้นใช้คำสั่ง `document.getElementById('notesContainer').innerHTML = ...` เพื่อแทรก HTML String ชุดนี้เข้าไปในหน้าเว็บ
+4. เบราว์เซอร์จะรับรู้ถึงการเปลี่ยนแปลงและทำการอัปเดต (Render) DOM Tree ใหม่ทันที ทำให้หน้าจอแสดงข้อมูลโน้ตใหม่ๆ ได้แบบไดนามิก (Dynamic) โดยที่ผู้ใช้ไม่ต้องกดรีเฟรชหน้าเว็บ (Page Reload)
 
 ## 3. HTTP Request/Response & The Importance of HTTPS
-**Explanation:**
-เมื่อผู้ใช้กรอกข้อมูลและกดปุ่ม "Save Note":
-1. หน้าบ้านจะส่ง **HTTP POST Request** ไปที่ `http://localhost:3000/api/notes`
-2. ใน Request จะมีการแนบ **Headers** สำคัญไป 2 ตัว คือ:
-   - `Content-Type: application/json` (บอกเซิร์ฟเวอร์ว่าส่งข้อมูลไปเป็น JSON)
-   - `Authorization: <token>` (ส่งรหัสผ่านเพื่อยืนยันสิทธิ์ที่ได้มาจาก prompt)
-3. ส่วน **Body** จะแนบข้อมูล `{ title, content }` ไปด้วย
-4. Backend รับข้อมูล เช็ก Token ว่าถูกต้องไหม แล้วบันทึกลง PocketHost หากสำเร็จจะตอบกลับด้วย **Status Code 201 (Created)** หรือถ้า Token ผิด จะตอบกลับด้วย **401 (Unauthorized)**
-* **ทำไม HTTPS จึงสำคัญ?** ในระบบจริง หากเราใช้แค่ HTTP ข้อมูลทั้งหมด (รวมถึง Secret Token ใน Header) จะถูกส่งผ่านเครือข่ายเป็น Plain Text ซึ่งเสี่ยงต่อการถูกดักจับข้อมูล (Man-in-the-Middle Attack) การใช้ HTTPS จะเข้ารหัสข้อมูลทั้งหมด ทำให้แฮกเกอร์อ่านข้อมูลระหว่างทางไม่ได้
+**Explanation:** วงจรการรับส่งข้อมูลเมื่อผู้ใช้สร้างโน้ตใหม่:
+1. หน้าบ้านจะส่ง **HTTP POST Request** ไปที่ Backend API (เช่น `https://secure-note-app-2k7r.vercel.app/api/notes`)
+2. ในส่วน **Headers** ของ Request จะแนบข้อมูลสำคัญ 2 ส่วนคือ:
+   - `Content-Type: application/json` (ระบุรูปแบบข้อมูล)
+   - `Authorization: <token>` (ส่งรหัสผ่านที่ได้จาก prompt เพื่อยืนยันสิทธิ์)
+3. ในส่วน **Body** จะแนบข้อมูลโน้ตเป็น JSON `{ title, content }`
+4. Backend รับข้อมูล ตรวจสอบ Token ว่าตรงกับ `.env` หรือไม่ หากสำเร็จจะบันทึกข้อมูลและตอบกลับด้วย **Status Code 201 (Created)** หาก Token ผิด จะปฏิเสธพร้อมส่ง **401 (Unauthorized)** กลับไป
 
-## 4. Environment Variables & Security
-**Explanation:**
-เก็บค่า `SECRET_TOKEN`, `PORT`, `POCKET_URL` และ `POCKET_TOKEN` ไว้ในไฟล์ `.env` ที่ฝั่ง Backend เพื่อความปลอดภัย:
-* ตัวแปรเหล่านี้จะถูกโหลดเข้าไปใน Node.js ตอนรันเซิร์ฟเวอร์ และจะไม่ถูกส่งออกไปยังฝั่ง Client
-* การที่นำไฟล์ `.env` ไปใส่ไว้ใน `.gitignore` ทำให้มั่นใจได้ว่าความลับเหล่านี้จะไม่ถูกพุช ขึ้นไปยัง GitHub ให้คนอื่นเห็น
-* **ถ้าเอา Token เหล่านี้ไปไว้ใน Frontend จะเกิดอะไรขึ้น?** หากเขียนโค้ดฝัง `SECRET_TOKEN` หรือ `POCKET_TOKEN` ไว้ในไฟล์ `app.js` (Frontend) รหัสผ่านเหล่านี้จะหลุดไปสู่สาธารณะทันที เพราะผู้ใช้ทุกคนสามารถคลิกขวา -> "Inspect" (F12) -> แถบ "Sources" เพื่อดูโค้ด JS ทั้งหมดและขโมยรหัสไปลบหรือแก้ไขข้อมูลในฐานข้อมูลเรา
+**ความสำคัญของ HTTPS:**
+หากระบบใช้เพียง HTTP ข้อมูลทั้งหมดที่รับส่ง (รวมถึง Secret Token ใน Header) จะถูกส่งเป็น Plain Text ซึ่งเสี่ยงต่อการถูกดักจับข้อมูลระหว่างทาง (Man-in-the-Middle Attack) การใช้งานบน Vercel ซึ่งรองรับ **HTTPS** จะช่วยเข้ารหัสข้อมูลทั้งหมด ทำให้แฮกเกอร์ไม่สามารถอ่านข้อมูลความลับนี้ได้
 
-## 5. Bonus: Secure Data Architecture (PocketHost)
-**Explanation:**
-โปรเจกต์นี้มีการประยุกต์ใช้ **Proxy Architecture** กับ PocketHost API เพื่อความปลอดภัยสูงสุด:
-Frontend จะไม่ยิง Request ไปที่ PocketHost โดยตรง แต่จะยิงมาหา Backend ของเราก่อน แล้ว Backend (ซึ่งซ่อน `POCKET_TOKEN` ไว้ใน `.env`) จะทำหน้าที่เป็นตัวแทน (Proxy) ไปคุยกับ PocketHost ให้ วิธีนี้ทำให้ระบบสามารถใช้ Database บน Cloud ได้โดยที่ Access Token ของ Database ไม่เสี่ยงต่อการรั่วไหล
+## 4. Environment Variables & Security Implications
+**Explanation:** โปรเจกต์นี้จัดการความปลอดภัยโดยเก็บค่าความลับ เช่น `SECRET_TOKEN`, `PORT`, `POCKET_URL` และ `POCKET_TOKEN` ไว้ในไฟล์ `.env` ที่ฝั่ง Backend:
+* ตัวแปรเหล่านี้จะถูกโหลดเข้าไปใน Node.js ระหว่างที่เซิร์ฟเวอร์ทำงาน และจะไม่ถูกส่งกลับไปยังฝั่ง Client อย่างเด็ดขาด
+* มีการตั้งค่าไฟล์ `.gitignore` เพื่อป้องกันไม่ให้ไฟล์ `.env` ถูกพุชขึ้นไปยัง Public Repository บน GitHub
+* **ผลกระทบหากนำ Secrets ไปไว้ใน Frontend:** หากเราฝัง (Hardcode) `SECRET_TOKEN` หรือ `POCKET_TOKEN` ไว้ในไฟล์ `app.js` ข้อมูลเหล่านี้จะหลุดไปสู่สาธารณะทันที ผู้ใช้งานทุกคนสามารถกด Inspect (F12) ไปที่แท็บ Sources เพื่อดูโค้ดและขโมย Token ไปแก้ไขหรือลบฐานข้อมูลทั้งหมดของเราได้อย่างง่ายดาย
+
+## 5. Bonus: Secure Data Architecture & Local Backup
+**Explanation:** โปรเจกต์นี้มีการออกแบบสถาปัตยกรรมข้อมูลที่ปลอดภัย (Proxy Architecture) ควบคู่กับระบบสำรองข้อมูล:
+* **Proxy API:** Frontend จะไม่พูดคุยกับฐานข้อมูล (PocketHost) โดยตรง แต่จะส่ง Request มาที่ Backend ก่อน Backend จะทำหน้าที่เป็นตัวกลางนำ `POCKET_TOKEN` ที่ซ่อนไว้ไปคุยกับฐานข้อมูลแทน ทำให้ Access Token ของ Cloud Database ปลอดภัย 100%
+* **Local Persistence:** ทุกครั้งที่มีการแก้ไขข้อมูล (POST, PATCH, DELETE) Backend จะเรียกใช้ฟังก์ชันดึงข้อมูลล่าสุดจาก PocketHost และใช้โมดูล `fs.writeFileSync` เพื่อสำรองข้อมูลลงไฟล์ `notes.json` ในเซิร์ฟเวอร์โดยอัตโนมัติ เพื่อเป็น Backup อีกชั้นหนึ่ง
